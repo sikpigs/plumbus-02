@@ -30,20 +30,21 @@ define_property(GLOBAL PROPERTY ALL_OBJECT_TARGETS
 # ------------------------------------------------------------
 # Assemble function
 # Usage:
-#   assemble_65c02(bios bios.s)
-#   assemble_65c02(bios bios.s DEFINES [DEBUG <defs>] [DEPENDS <deps>])
+#   assemble_65c02(bios SOURCES bios.s)
+#   assemble_65c02(bios SOURCES bios.s foo.s bar.s
+#                  DEFINES FOO=1 BAR
+#                  DEPENDS linker.cfg)
 # ------------------------------------------------------------
-function(assemble_65c02 TARGET SOURCE)
+function(assemble_65c02 TARGET)
     set(options)
     set(oneValueArgs)
-    set(multiValueArgs DEFINES DEPENDS)
+    set(multiValueArgs SOURCES DEFINES DEPENDS)
 
     cmake_parse_arguments(ASM "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    get_filename_component(SRC_NAME ${SOURCE} NAME_WE)
-
-    set(OBJ ${OBJ_DIR}/${SRC_NAME}.o)
-    set(OBJ_TARGET ${TARGET}_${SRC_NAME})
+    if (NOT ASM_SOURCES)
+        message(FATAL_ERROR "assemble_65c02: no SOURCES specified")
+    endif()
 
     # Build -D flags
     set(CA65_DEFINES "")
@@ -51,27 +52,30 @@ function(assemble_65c02 TARGET SOURCE)
         list(APPEND CA65_DEFINES "-D${DEF}")
     endforeach()
 
-    foreach (DEP ${ASM_DEPENDS})
-        list(APPEND DEPENDS "${DEP}")
+    foreach(SOURCE ${ASM_SOURCES})
+        get_filename_component(SRC_NAME ${SOURCE} NAME_WE)
+
+        set(OBJ ${OBJ_DIR}/${SRC_NAME}.o)
+        set(OBJ_TARGET ${TARGET}_${SRC_NAME})
+
+        add_custom_command(
+            OUTPUT ${OBJ}
+            COMMAND ${CA65}
+                ${CA65_DEFINES}
+                -o ${OBJ}
+                -I${CMAKE_SOURCE_DIR}/include
+                ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}
+            DEPENDS ${SOURCE} ${ASM_DEPENDS}
+            COMMENT "Assembling ${SOURCE}"
+            VERBATIM
+        )
+
+        add_custom_target(${OBJ_TARGET} DEPENDS ${OBJ})
+
+        # Register globally
+        set_property(GLOBAL APPEND PROPERTY ALL_OBJECTS ${OBJ})
+        set_property(GLOBAL APPEND PROPERTY ALL_OBJECT_TARGETS ${OBJ_TARGET})
     endforeach()
-
-    add_custom_command(
-        OUTPUT ${OBJ}
-        COMMAND ${CA65}
-            ${CA65_DEFINES}
-            -o ${OBJ}
-            -I${CMAKE_SOURCE_DIR}/include
-            ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}
-        DEPENDS ${SOURCE} ${DEPENDS}
-        COMMENT "Assembling ${SOURCE}"
-        VERBATIM
-    )
-
-    add_custom_target(${OBJ_TARGET} DEPENDS ${OBJ})
-
-    # Register globally
-    set_property(GLOBAL APPEND PROPERTY ALL_OBJECTS ${OBJ})
-    set_property(GLOBAL APPEND PROPERTY ALL_OBJECT_TARGETS ${OBJ_TARGET})
 endfunction()
 
 # ------------------------------------------------------------

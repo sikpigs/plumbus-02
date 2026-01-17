@@ -1,1 +1,1 @@
-assemble_65c02(wozmon wozmon.s)
+assemble_65c02(wozmon SOURCES wozmon.s)

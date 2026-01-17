@@ -16,7 +16,7 @@ H               = $29                   ; Hex value parsing High
 YSAV            = $2A                   ; Used to see if hex value is given
 MODE            = $2B                   ; $00=XAM, $7F=STOR, $AE=BLOCK XAM
 
-IN              = $0300                 ; Input buffer
+IN              = $0200                 ; Input buffer
 
 main:
 WOZMAIN:
