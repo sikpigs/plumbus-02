@@ -26,11 +26,11 @@ shift_init:
     stz     sr_status
     stz     sr_bytes_left
     stz     sr_data_ptr
-    stz     sr_data_ptr+1
+    stz     sr_data_ptr + 1
     stz     sr_callback
-    stz     sr_callback+1
+    stz     sr_callback + 1
     stz     sr_callback_ptr
-    stz     sr_callback_ptr+1
+    stz     sr_callback_ptr + 1
 
     rts
 
