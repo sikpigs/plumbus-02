@@ -1,9 +1,10 @@
 .setcpu "65C02"
 
-.export main
-
 .import putchar
 .import getchar
+
+.export main
+.export PRBYTE
 
 .segment "WOZMON"
 
@@ -181,5 +182,3 @@ PRHEX:
 ECHO:
                 JSR     putchar         ; Output character.
                 RTS                     ; Return.
-
-.export PRBYTE

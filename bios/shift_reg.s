@@ -2,6 +2,7 @@
 .debuginfo
 .include "hw.inc"
 .include "defs.inc"
+.include "structs.inc"
 
 .export shift_irq
 .export shift_set_clk
@@ -9,10 +10,9 @@
 .export shift_set_callback
 .export shift_init
 
-.importzp bios_data_ptr
+.importzp bios_zp
 
-.zeropage
-sr_callback_ptr:    .res 2
+bios_private    = bios_zp
 
 .segment "BIOSRAM"
 sr_data_ptr:        .res 2
@@ -29,8 +29,6 @@ shift_init:
     stz     sr_data_ptr + 1
     stz     sr_callback
     stz     sr_callback + 1
-    stz     sr_callback_ptr
-    stz     sr_callback_ptr + 1
 
     rts
 
@@ -39,11 +37,11 @@ shift_irq:
     beq     @sr_done
 
     lda     sr_data_ptr
-    sta     bios_data_ptr
+    sta     bios_private + BIOSPrivate::shift_data_ptr
     lda     sr_data_ptr + 1
-    sta     bios_data_ptr + 1
+    sta     bios_private + BIOSPrivate::shift_data_ptr + 1
   
-    lda     (bios_data_ptr)
+    lda     (bios_private + BIOSPrivate::shift_data_ptr)
     sta     VIA_SR
 
     inc     sr_data_ptr
@@ -83,21 +81,21 @@ shift_set_clk:
 
 exec_shift_callback:
     ldx     sr_callback
-    ldy     sr_callback+1
+    ldy     sr_callback + 1
     cpx     #$00
     bne     :+
     cpy     #$00
     beq     @sr_callback_return
 :
-    stx     sr_callback_ptr
-    sty     sr_callback_ptr+1
+    stx     bios_private + BIOSPrivate::shift_func_ptr
+    sty     bios_private + BIOSPrivate::shift_func_ptr + 1
 
-    lda     #>(@sr_callback_return-1)
+    lda     #<(@sr_callback_return - 1)
     pha
-    lda     #<(@sr_callback_return-1)
+    lda     #>(@sr_callback_return - 1)
     pha
 
-    jmp     (sr_callback_ptr)
+    jmp     (bios_private + BIOSPrivate::shift_func_ptr)
 
 @sr_callback_return:
     rts
@@ -107,7 +105,7 @@ exec_shift_callback:
 ;
 ; Inputs:
 ;   A       - byte count
-;   <Y, X>  - data pointer
+;   (Y, X)  - data pointer
 ; 
 shift_out:
     ; Bail early on 0 bytes
@@ -120,20 +118,20 @@ shift_out:
 
     sta     sr_bytes_left
     
-    stx     bios_data_ptr
+    stx     bios_private + BIOSPrivate::shift_data_ptr
     stx     sr_data_ptr
-    sty     bios_data_ptr + 1
+    sty     bios_private + BIOSPrivate::shift_data_ptr + 1
     sty     sr_data_ptr + 1
 
     lda     #80
     sta     sr_status
     ; Send 1st byte
-    lda     (bios_data_ptr)
+    lda     (bios_private + BIOSPrivate::shift_data_ptr)
     sta     VIA_SR
 
-    inc     bios_data_ptr
+    inc     bios_private + BIOSPrivate::shift_data_ptr
     bne     :+
-    inc     bios_data_ptr + 1
+    inc     bios_private + BIOSPrivate::shift_data_ptr + 1
 :
 
     dec     sr_bytes_left
