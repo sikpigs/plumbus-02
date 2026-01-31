@@ -522,7 +522,7 @@ memset:
     ply
     rts
 
-RUN_MEMSET := 1
+; RUN_MEMSET := 1
 
 .ifdef RUN_MEMSET
 run_memset:
@@ -815,7 +815,7 @@ memmove:
 @memmove_done:
     rts
 
-RUN_MEMMOVE := 1
+; RUN_MEMMOVE := 1
 
 .ifdef RUN_MEMMOVE
 run_memmove:
@@ -852,31 +852,48 @@ run_memmove:
 .endmacro
 
 MOV_GUARD_SIZE  = 16
-MOV_ARENA_SIZE  = 448
+MOV_ARENA_SIZE  = 480
 MOV_OVERLAP     = 50
+SRC_TOP_SIZE    = 34
+SRC_MIDDLE_SIZE = 16
+SRC_END_SIZE    = 430
 
-DST_PATTERN         = $00
-SRC_PATTERN         = $FF
-SRC_GUARD_PATTERN   = $AA
-DST_GUARD_PATTERN   = $55
+DST_PATTERN         = $EE
+SRC_PATTERN_TOP     = $FF
+SRC_PATTERN_MIDDLE  = $00
+SRC_PATTERN_END     = $55
+
+DST_OVERLAP_PATTERN     = $DD
+DST_GUARD_PATTERN       = $CC
+SRC_GUARD_PATTERN_HI    = $BB
+SRC_GUARD_PATTERN_LO    = $AA
 
 .union MemMov
     .struct Src
         guard_hi    .byte 16    ; MOV_GUARD_SIZE
-        src         .byte 448   ; MOV_ARENA_SIZE
+        top         .byte 34
+        middle      .byte 16
+        end         .byte 430
         guard_lo    .byte 16    ; MOV_GUARD_SIZE
     .endstruct
     .struct Dst
         overlap     .byte 50    ; MOV_OVERLAP
-        dst         .byte 448   ; MOV_ARENA_SIZE
+        dst         .byte 480   ; MOV_ARENA_SIZE
         guard_lo    .byte 16    ; MOV_GUARD_SIZE
     .endstruct
 .endunion
 
+.assert(MemMov::Src::top      = $10),  error, "Src.top offset wrong"
+.assert(MemMov::Src::middle   = $32),  error, "Src.middle offset wrong"
+.assert(MemMov::Src::end      = $42),  error, "Src.end offset wrong"
+.assert(MemMov::Src::guard_lo = $1F0), error, "Src.guard_lo offset wrong"
+.assert(MemMov::Dst::guard_lo = $212), error, "Dst.guard_lo offset wrong"
+
 .struct MemMovExp
-    guard_hi    .byte 16        ; MOV_GUARD_SIZE
-    exp         .byte 448       ; MOV_ARENA_SIZE
-    guard_lo    .byte 16        ; MOV_GUARD_SIZE
+    top         .byte 34
+    middle      .byte 16
+    end         .byte 430
+    guard_lo    .byte 16    ; MOV_GUARD_SIZE
 .endstruct
 
 .struct MemMovInit
@@ -885,41 +902,50 @@ DST_GUARD_PATTERN   = $55
     pattern .byte
 .endstruct
 
-.macro MEMSET dst, count, pattern
+.macro MOVINIT dst, count, pattern
     .addr   dst
     .word   count
     .byte   pattern
 .endmacro
 
 .segment "RODATA"
-memmove_init:
-    MEMSET  memmove_test_dst + MemMov::Dst::dst, MOV_ARENA_SIZE, DST_PATTERN
-    MEMSET  memmove_test_dst + MemMov::Dst::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN
-    MEMSET  memmove_test_src + MemMov::Src::src, MOV_ARENA_SIZE, SRC_PATTERN
-    MEMSET  memmove_test_src + MemMov::Src::guard_hi, MOV_GUARD_SIZE, SRC_GUARD_PATTERN
-    MEMSET  memmove_test_src + MemMov::Src::guard_lo, MOV_GUARD_SIZE, SRC_GUARD_PATTERN
-    MEMSET  memmove_test_exp + MemMovExp::exp, MOV_ARENA_SIZE, SRC_PATTERN
-    MEMSET  memmove_test_exp + MemMov::Src::guard_hi, MOV_GUARD_SIZE, DST_GUARD_PATTERN
-    MEMSET  memmove_test_exp + MemMov::Src::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN
-memmove_init_end:
+memmove_test_init:
+    MOVINIT  memmove_test_dst + MemMov::Dst::dst, MOV_ARENA_SIZE, DST_PATTERN                ; $EE
+    MOVINIT  memmove_test_dst + MemMov::Dst::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN     ; $CC
 
-MEMMOVE_INIT_COUNT = (memmove_init_end - memmove_init) / .sizeof(MemMovInit)
-MOV_AREA_SIZE = .sizeof(MemMov)
+    MOVINIT  memmove_test_src + MemMov::Src::guard_hi, MOV_GUARD_SIZE, SRC_GUARD_PATTERN_HI  ; $BB
+    MOVINIT  memmove_test_src + MemMov::Src::top, SRC_TOP_SIZE, SRC_PATTERN_TOP              ; $FF
+    MOVINIT  memmove_test_src + MemMov::Src::middle, SRC_MIDDLE_SIZE, SRC_PATTERN_MIDDLE     ; $00
+    MOVINIT  memmove_test_src + MemMov::Src::end, SRC_END_SIZE, SRC_PATTERN_END              ; $55
+    MOVINIT  memmove_test_src + MemMov::Src::guard_lo, MOV_GUARD_SIZE, SRC_GUARD_PATTERN_LO  ; $AA
+
+    MOVINIT  memmove_test_exp + MemMovExp::top, SRC_TOP_SIZE, SRC_PATTERN_TOP                ; $FF
+    MOVINIT  memmove_test_exp + MemMovExp::middle, SRC_MIDDLE_SIZE, SRC_PATTERN_MIDDLE       ; $00
+    MOVINIT  memmove_test_exp + MemMovExp::end, SRC_END_SIZE, SRC_PATTERN_END                ; $55
+    MOVINIT  memmove_test_exp + MemMovExp::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN       ; $CC
+memmove_test_init_end:
+
+MEMMOVE_INIT_COUNT = (memmove_test_init_end - memmove_test_init) / .sizeof(MemMovInit)
 
 .segment "BIOSRAM"
 
-memmove_area:       .res MOV_AREA_SIZE
+memmove_area:       .res .sizeof(MemMov)
 memmove_test_exp:   .res .sizeof(MemMovExp)
+
 memmove_test_src = memmove_area
 memmove_test_dst = memmove_area
 
 .segment "BIOS"
 
+.import putchar
+.import print_newline
+.import PRBYTE
+
 memmove_test:
     ldx     #0
-    lda     #<memmove_init
+    lda     #<memmove_test_init
     sta     bios_private + BIOSPrivate::ptr + Ptr::lo
-    lda     #>memmove_init
+    lda     #>memmove_test_init
     sta     bios_private + BIOSPrivate::ptr + Ptr::hi
 @next_init:
     ; set dst
@@ -960,18 +986,52 @@ memmove_test:
     lda     #>(memmove_test_dst + MemMov::Dst::dst)
     sta     mem_args + MemArgs::dst + Ptr::hi
     ; set src
-    lda     #<(memmove_test_src + MemMov::Src::src)
+    lda     #<(memmove_test_src + MemMov::Src::top)
     sta     mem_args + MemArgs::src + Ptr::lo
-    lda     #>(memmove_test_src + MemMov::Src::src)
+    lda     #>(memmove_test_src + MemMov::Src::top)
     sta     mem_args + MemArgs::src + Ptr::hi
-SET_COUNT:
     ; set count
     lda     #<MOV_ARENA_SIZE
     sta     mem_args + MemArgs::count
     lda     #>MOV_ARENA_SIZE
     sta     mem_args + MemArgs::count + 1
+    jsr     print_newline
+    lda     #0
+    jsr     PRBYTE
+    lda     #'R'
+    jsr     putchar
     ; go
     jsr     memmove
+    ; verify move
+    ; set dst
+    lda     #<(memmove_test_dst + MemMov::Dst::dst)
+    sta     mem_args + MemArgs::dst + Ptr::lo
+    lda     #>(memmove_test_dst + MemMov::Dst::dst)
+    sta     mem_args + MemArgs::dst + Ptr::hi
+    ; set expected
+    lda     #<(memmove_test_exp + MemMovExp::top)
+    sta     mem_args + MemArgs::src + Ptr::lo
+    lda     #>(memmove_test_exp + MemMovExp::top)
+    sta     mem_args + MemArgs::src + Ptr::hi
+    ; set count
+    lda     #<MOV_ARENA_SIZE
+    sta     mem_args + MemArgs::count
+    lda     #>MOV_ARENA_SIZE
+    sta     mem_args + MemArgs::count + 1
+    lda     #':'
+    jsr     putchar
+    jsr     memcmp
+    pha
+    jsr     PRBYTE
+    pla
+    bne     :+
+    lda     #'.'
+    jsr     putchar
+    bra     @exit
+:
+    lda     #'E'
+    jsr     putchar
+@exit:
     jmp     $FF00
 
 .endif
