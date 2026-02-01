@@ -162,9 +162,9 @@ memcmp_expect:      .res 1
 memcmp_run_tests:
     ldx     #0
     lda     #<memcmp_tests
-    sta     bios_private + BIOSPrivate::ptr + Ptr::lo
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::lo
     lda     #>memcmp_tests
-    sta     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::hi
 
 @next_test:
     jsr     print_newline
@@ -173,31 +173,31 @@ memcmp_run_tests:
 
     ; load src
     ldy     #MemCmpTest::src
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::src + Ptr::lo
     iny     
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::src + Ptr::hi
 
     ; load dst
     ldy     #MemCmpTest::dst
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::dst + Ptr::lo
     iny     
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::dst + Ptr::hi
 
     ; load count
     ldy     #MemCmpTest::count
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::count
     iny     
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::count + 1
 
     ; load expected result
     ldy     #MemCmpTest::expect
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     memcmp_expect
 
     lda     #'R'
@@ -222,12 +222,12 @@ memcmp_run_tests:
 
 @prep_next_test:
     clc
-    lda     bios_private + BIOSPrivate::ptr + Ptr::lo
+    lda     bios_private + BIOSPrivate::ptr0 + Ptr::lo
     adc     #.sizeof(MemCmpTest)
-    sta     bios_private + BIOSPrivate::ptr + Ptr::lo
-    lda     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    lda     bios_private + BIOSPrivate::ptr0 + Ptr::hi
     adc     #0
-    sta     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::hi
     
     inx
     cpx     #memcmp_test_count
@@ -384,9 +384,9 @@ memcpy_test_count = (memcpy_tests_end - memcpy_tests) / .sizeof(MemCpyTest)
 memcpy_run_tests:
     ldx     #0
     lda     #<memcpy_tests
-    sta     bios_private + BIOSPrivate::ptr + Ptr::lo
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::lo
     lda     #>memcpy_tests
-    sta     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::hi
 
 @next_test:
     jsr     print_newline
@@ -412,10 +412,10 @@ memcpy_run_tests:
 
     ; load src
     ldy     #MemCpyTest::src
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::src + Ptr::lo
     iny
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::src + Ptr::hi
 
     ; load dest
@@ -426,10 +426,10 @@ memcpy_run_tests:
 
     ; load number of bytes to copy into count
     ldy     #MemCpyTest::copy_count
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::count
     iny
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::count + 1
     
     lda     #'R'
@@ -440,10 +440,10 @@ memcpy_run_tests:
 
     ; load expect into src
     ldy     #MemCpyTest::expect
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::src + Ptr::lo
     iny
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::src + Ptr::hi
 
     ; load dest
@@ -471,12 +471,12 @@ memcpy_run_tests:
     jsr     putchar
 @prep_next_test:
     clc
-    lda     bios_private + BIOSPrivate::ptr + Ptr::lo
+    lda     bios_private + BIOSPrivate::ptr0 + Ptr::lo
     adc     #.sizeof(MemCpyTest)
-    sta     bios_private + BIOSPrivate::ptr + Ptr::lo
-    lda     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    lda     bios_private + BIOSPrivate::ptr0 + Ptr::hi
     adc     #0
-    sta     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::hi
 
     inx
     cpx     #memcpy_test_count
@@ -628,9 +628,9 @@ memset_guard_hi:
 memset_run_tests:
     ldx     #0
     lda     #<memset_tests
-    sta     bios_private + BIOSPrivate::ptr + Ptr::lo
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::lo
     lda     #>memset_tests
-    sta     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::hi
 @next_test:
     jsr     print_newline
     txa
@@ -666,10 +666,10 @@ memset_run_tests:
 
     ; load number of bytes to set into count
     ldy     #MemSetTest::count
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::count
     iny
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::count + 1
     
     lda     #'R'
@@ -680,10 +680,10 @@ memset_run_tests:
 
     ; load expect into src
     ldy     #MemSetTest::expect
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::src + Ptr::lo
     iny
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     mem_args + MemArgs::src + Ptr::hi
 
     ; load dest
@@ -713,12 +713,12 @@ memset_run_tests:
     jsr     putchar
 @prep_next_test:
     clc
-    lda     bios_private + BIOSPrivate::ptr + Ptr::lo
+    lda     bios_private + BIOSPrivate::ptr0 + Ptr::lo
     adc     #.sizeof(MemSetTest)
-    sta     bios_private + BIOSPrivate::ptr + Ptr::lo
-    lda     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    lda     bios_private + BIOSPrivate::ptr0 + Ptr::hi
     adc     #0
-    sta     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::hi
 
     inx
     cpx     #memset_test_count
@@ -782,6 +782,9 @@ memmove:
     ; backward memcpy
     ; dst += count
     ; src += count
+    ; do
+    ;   --dst;
+    ;   --src;
     ;   *dst = *src;
     ;   --count
     ; until count == 0
@@ -839,24 +842,13 @@ run_memmove:
 
 .ifdef TEST_MEMMOVE
 
-.struct MemMovTest
-    src         .addr
-    copy_count  .word
-    expect      .addr
-.endstruct
-
-.macro MOVTST src, count, expect
-    .addr   src
-    .word   count
-    .addr   expect
-.endmacro
-
-MOV_GUARD_SIZE  = 16
-MOV_ARENA_SIZE  = 480
-MOV_OVERLAP     = 50
-SRC_TOP_SIZE    = 34
-SRC_MIDDLE_SIZE = 16
-SRC_END_SIZE    = 430
+.segment "RODATA"
+.define MOV_GUARD_SIZE  16
+.define MOV_ARENA_SIZE  480
+.define MOV_OVERLAP     50
+.define SRC_TOP_SIZE    34
+.define SRC_MIDDLE_SIZE 16
+.define SRC_END_SIZE    430
 
 DST_PATTERN         = $EE
 SRC_PATTERN_TOP     = $FF
@@ -870,30 +862,33 @@ SRC_GUARD_PATTERN_LO    = $AA
 
 .union MemMov
     .struct Src
-        guard_hi    .byte 16    ; MOV_GUARD_SIZE
-        top         .byte 34
-        middle      .byte 16
-        end         .byte 430
-        guard_lo    .byte 16    ; MOV_GUARD_SIZE
+        guard_hi    .byte MOV_GUARD_SIZE
+        top         .byte SRC_TOP_SIZE
+        middle      .byte SRC_MIDDLE_SIZE
+        end         .byte SRC_END_SIZE
+        guard_lo    .byte MOV_GUARD_SIZE
     .endstruct
     .struct Dst
-        overlap     .byte 50    ; MOV_OVERLAP
-        dst         .byte 480   ; MOV_ARENA_SIZE
-        guard_lo    .byte 16    ; MOV_GUARD_SIZE
+        overlap     .byte MOV_OVERLAP
+        dst         .byte MOV_ARENA_SIZE
+        guard_lo    .byte MOV_GUARD_SIZE
     .endstruct
 .endunion
 
+.assert(MemMov::Src::guard_hi = $0), error, "Src.guard_lo offset wrong"
 .assert(MemMov::Src::top      = $10),  error, "Src.top offset wrong"
 .assert(MemMov::Src::middle   = $32),  error, "Src.middle offset wrong"
 .assert(MemMov::Src::end      = $42),  error, "Src.end offset wrong"
 .assert(MemMov::Src::guard_lo = $1F0), error, "Src.guard_lo offset wrong"
+.assert(MemMov::Dst::overlap  = $0), error, "Dst.overlap offset wrong"
+.assert(MemMov::Dst::dst      = $32), error, "Dst.dst offset wrong"
 .assert(MemMov::Dst::guard_lo = $212), error, "Dst.guard_lo offset wrong"
 
 .struct MemMovExp
-    top         .byte 34
-    middle      .byte 16
-    end         .byte 430
-    guard_lo    .byte 16    ; MOV_GUARD_SIZE
+    top         .byte SRC_TOP_SIZE 
+    middle      .byte SRC_MIDDLE_SIZE
+    end         .byte SRC_END_SIZE
+    guard_lo    .byte MOV_GUARD_SIZE
 .endstruct
 
 .struct MemMovInit
@@ -908,32 +903,49 @@ SRC_GUARD_PATTERN_LO    = $AA
     .byte   pattern
 .endmacro
 
-.segment "RODATA"
-memmove_test_init:
-    MOVINIT  memmove_test_dst + MemMov::Dst::dst, MOV_ARENA_SIZE, DST_PATTERN                ; $EE
-    MOVINIT  memmove_test_dst + MemMov::Dst::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN     ; $CC
+.struct MemMovTest
+    test_addr   .addr
+    init        .addr
+    init_count  .byte
+.endstruct
 
-    MOVINIT  memmove_test_src + MemMov::Src::guard_hi, MOV_GUARD_SIZE, SRC_GUARD_PATTERN_HI  ; $BB
-    MOVINIT  memmove_test_src + MemMov::Src::top, SRC_TOP_SIZE, SRC_PATTERN_TOP              ; $FF
-    MOVINIT  memmove_test_src + MemMov::Src::middle, SRC_MIDDLE_SIZE, SRC_PATTERN_MIDDLE     ; $00
-    MOVINIT  memmove_test_src + MemMov::Src::end, SRC_END_SIZE, SRC_PATTERN_END              ; $55
-    MOVINIT  memmove_test_src + MemMov::Src::guard_lo, MOV_GUARD_SIZE, SRC_GUARD_PATTERN_LO  ; $AA
+.macro MOVTST test_addr, init, init_count
+    .addr   test_addr
+    .addr   init
+    .byte   init_count
+.endmacro
 
-    MOVINIT  memmove_test_exp + MemMovExp::top, SRC_TOP_SIZE, SRC_PATTERN_TOP                ; $FF
-    MOVINIT  memmove_test_exp + MemMovExp::middle, SRC_MIDDLE_SIZE, SRC_PATTERN_MIDDLE       ; $00
-    MOVINIT  memmove_test_exp + MemMovExp::end, SRC_END_SIZE, SRC_PATTERN_END                ; $55
-    MOVINIT  memmove_test_exp + MemMovExp::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN       ; $CC
-memmove_test_init_end:
+memmove_backward_test_init:
+    MOVINIT memmove_backward_test_dst + MemMov::Dst::dst, MOV_ARENA_SIZE, DST_PATTERN                ; $EE
+    MOVINIT memmove_backward_test_dst + MemMov::Dst::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN     ; $CC
 
-MEMMOVE_INIT_COUNT = (memmove_test_init_end - memmove_test_init) / .sizeof(MemMovInit)
+    MOVINIT memmove_backward_test_src + MemMov::Src::guard_hi, MOV_GUARD_SIZE, SRC_GUARD_PATTERN_HI  ; $BB
+    MOVINIT memmove_backward_test_src + MemMov::Src::top, SRC_TOP_SIZE, SRC_PATTERN_TOP              ; $FF
+    MOVINIT memmove_backward_test_src + MemMov::Src::middle, SRC_MIDDLE_SIZE, SRC_PATTERN_MIDDLE     ; $00
+    MOVINIT memmove_backward_test_src + MemMov::Src::end, SRC_END_SIZE, SRC_PATTERN_END              ; $55
+    MOVINIT memmove_backward_test_src + MemMov::Src::guard_lo, MOV_GUARD_SIZE, SRC_GUARD_PATTERN_LO  ; $AA
+
+    MOVINIT memmove_backward_test_exp + MemMovExp::top, SRC_TOP_SIZE, SRC_PATTERN_TOP                ; $FF
+    MOVINIT memmove_backward_test_exp + MemMovExp::middle, SRC_MIDDLE_SIZE, SRC_PATTERN_MIDDLE       ; $00
+    MOVINIT memmove_backward_test_exp + MemMovExp::end, SRC_END_SIZE, SRC_PATTERN_END                ; $55
+    MOVINIT memmove_backward_test_exp + MemMovExp::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN       ; $CC
+memmove_backward_test_init_end:
+
+MEMMOVE_BACK_TEST_INIT_COUNT = (memmove_backward_test_init_end - memmove_backward_test_init) / .sizeof(MemMovInit)
+
+memmove_tests:
+    MOVTST memmove_backward_test, memmove_backward_test_init, MEMMOVE_BACK_TEST_INIT_COUNT
+memmove_tests_end:
+
+MEMMOVE_TESTS_COUNT = (memmove_tests_end - memmove_tests) / .sizeof(MemMovTest)
 
 .segment "BIOSRAM"
 
-memmove_area:       .res .sizeof(MemMov)
-memmove_test_exp:   .res .sizeof(MemMovExp)
+memmove_backward_test_area:  .res .sizeof(MemMov)
+memmove_backward_test_exp:   .res .sizeof(MemMovExp)
 
-memmove_test_src = memmove_area
-memmove_test_dst = memmove_area
+memmove_backward_test_src = memmove_backward_test_area
+memmove_backward_test_dst = memmove_backward_test_area
 
 .segment "BIOS"
 
@@ -941,97 +953,164 @@ memmove_test_dst = memmove_area
 .import print_newline
 .import PRBYTE
 
-memmove_test:
-    ldx     #0
-    lda     #<memmove_test_init
-    sta     bios_private + BIOSPrivate::ptr + Ptr::lo
-    lda     #>memmove_test_init
-    sta     bios_private + BIOSPrivate::ptr + Ptr::hi
+;
+; BIOSPrivate::ptr[1] - pointer to array of init structures
+; A - Number of init structures
+;
+memmove_test_init:
+    cmp     #0
+    bne     :+
+    rts
+:
+    phx
+    tax
 @next_init:
     ; set dst
-    ldy     #MemMovInit::dst
-    lda     (bios_private + BIOSPrivate::ptr), y
+    ldy     #MemMovInit::dst + Ptr::lo
+    lda     (bios_private + BIOSPrivate::ptr1), y
     sta     mem_args + MemArgs::dst + Ptr::lo
-    iny
-    lda     (bios_private + BIOSPrivate::ptr), y
+    ldy     #MemMovInit::dst + Ptr::hi
+    lda     (bios_private + BIOSPrivate::ptr1), y
     sta     mem_args + MemArgs::dst + Ptr::hi
     ; set count
-    ldy     #MemMovInit::count
-    lda     (bios_private + BIOSPrivate::ptr), y
-    sta     mem_args + MemArgs::count
-    iny
-    lda     (bios_private + BIOSPrivate::ptr), y 
-    sta     mem_args + MemArgs::count + 1
+    ldy     #MemMovInit::count + UInt16::lo
+    lda     (bios_private + BIOSPrivate::ptr1), y
+    sta     mem_args + MemArgs::count + UInt16::lo
+    ldy     #MemMovInit::count + UInt16::hi
+    lda     (bios_private + BIOSPrivate::ptr1), y
+    sta     mem_args + MemArgs::count + UInt16::hi
     ; load the pattern
     ldy     #MemMovInit::pattern
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr1), y
     ; go
     jsr     memset
     ; increment the pointer to the next init struct
     clc
-    lda     bios_private + BIOSPrivate::ptr + Ptr::lo
+    ldy     #Ptr::lo
+    lda     bios_private + BIOSPrivate::ptr1, y
     adc     #.sizeof(MemMovInit)
-    sta     bios_private + BIOSPrivate::ptr + Ptr::lo
-    lda     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr1, y
+    ldy    #Ptr::hi
+    lda     bios_private + BIOSPrivate::ptr1, y
     adc     #0
-    sta     bios_private + BIOSPrivate::ptr + Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr1, y
     ; check for last 
-    inx
-    cpx     #MEMMOVE_INIT_COUNT
+    dex
     bne     @next_init
+    plx
+    rts
+
+;
+; memove backwards test
+; returns result in A - 0 pass, non-zero fail
+;
+memmove_backward_test:
     ; setup for test
     ; set dst
-    lda     #<(memmove_test_dst + MemMov::Dst::dst)
+    lda     #<(memmove_backward_test_dst + MemMov::Dst::dst)
     sta     mem_args + MemArgs::dst + Ptr::lo
-    lda     #>(memmove_test_dst + MemMov::Dst::dst)
+    lda     #>(memmove_backward_test_dst + MemMov::Dst::dst)
     sta     mem_args + MemArgs::dst + Ptr::hi
     ; set src
-    lda     #<(memmove_test_src + MemMov::Src::top)
+    lda     #<(memmove_backward_test_src + MemMov::Src::top)
     sta     mem_args + MemArgs::src + Ptr::lo
-    lda     #>(memmove_test_src + MemMov::Src::top)
+    lda     #>(memmove_backward_test_src + MemMov::Src::top)
     sta     mem_args + MemArgs::src + Ptr::hi
     ; set count
     lda     #<MOV_ARENA_SIZE
     sta     mem_args + MemArgs::count
     lda     #>MOV_ARENA_SIZE
     sta     mem_args + MemArgs::count + 1
-    jsr     print_newline
-    lda     #0
-    jsr     PRBYTE
-    lda     #'R'
-    jsr     putchar
     ; go
     jsr     memmove
     ; verify move
     ; set dst
-    lda     #<(memmove_test_dst + MemMov::Dst::dst)
+    lda     #<(memmove_backward_test_dst + MemMov::Dst::dst)
     sta     mem_args + MemArgs::dst + Ptr::lo
-    lda     #>(memmove_test_dst + MemMov::Dst::dst)
+    lda     #>(memmove_backward_test_dst + MemMov::Dst::dst)
     sta     mem_args + MemArgs::dst + Ptr::hi
     ; set expected
-    lda     #<(memmove_test_exp + MemMovExp::top)
+    lda     #<(memmove_backward_test_exp + MemMovExp::top)
     sta     mem_args + MemArgs::src + Ptr::lo
-    lda     #>(memmove_test_exp + MemMovExp::top)
+    lda     #>(memmove_backward_test_exp + MemMovExp::top)
     sta     mem_args + MemArgs::src + Ptr::hi
     ; set count
     lda     #<MOV_ARENA_SIZE
     sta     mem_args + MemArgs::count
     lda     #>MOV_ARENA_SIZE
     sta     mem_args + MemArgs::count + 1
-    lda     #':'
-    jsr     putchar
     jsr     memcmp
+    rts
+
+memmove_run_tests:
+    ldx     #0
+    lda     #<memmove_tests
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    lda     #>memmove_tests
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::hi
+@next_test:
+    jsr     print_newline
+    ; set the init array pointer
+    txa
+    jsr     PRBYTE
+    ldy     #MemMovTest::init + Ptr::lo
+    lda     (bios_private + BIOSPrivate::ptr0), y
+    ldy     #Ptr::lo
+    sta     bios_private + BIOSPrivate::ptr1, y
+    ldy     #MemMovTest::init + Ptr::hi
+    lda     (bios_private + BIOSPrivate::ptr0), y
+    ldy     #Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr1, y
+    ; set the init array size
+    ldy     #MemMovTest::init_count
+    lda     (bios_private + BIOSPrivate::ptr0), y
+    jsr     memmove_test_init
+    ; execute the test
+    ; set the test function pointer
+    ldy     #MemMovTest::test_addr + Ptr::lo
+    lda     (bios_private + BIOSPrivate::ptr0), y
+    ldy     #Ptr::lo
+    sta     bios_private + BIOSPrivate::ptr1, y
+    ldy     #MemMovTest::test_addr + Ptr::hi
+    lda     (bios_private + BIOSPrivate::ptr0), y
+    ldy     #Ptr::hi
+    sta     bios_private + BIOSPrivate::ptr1, y
+    ; execute indirect function call
+    lda     #'R'
+    jsr     putchar
+    phx
+    lda     #>(@prep_next_test - 1)
+    pha
+    lda     #<(@prep_next_test - 1)
+    pha
+    jmp     (bios_private + BIOSPrivate::ptr1)
+@prep_next_test:
+    plx
     pha
     jsr     PRBYTE
+    lda     #':'
+    jsr     putchar
     pla
+    cmp     #0
     bne     :+
     lda     #'.'
     jsr     putchar
-    bra     @exit
+    bra     @inc_ptrs
 :
     lda     #'E'
     jsr     putchar
-@exit:
+@inc_ptrs:
+    clc
+    lda     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    adc     #.sizeof(MemMovTest)
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    lda     bios_private + BIOSPrivate::ptr0 + Ptr::hi
+    adc     #0
+    sta     bios_private + BIOSPrivate::ptr0 + Ptr::hi
+    inx
+    cpx     #MEMMOVE_TESTS_COUNT
+    beq     :+
+    bra     @next_test
+:
     jmp     $FF00
-
 .endif

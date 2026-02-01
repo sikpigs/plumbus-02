@@ -74,26 +74,26 @@ uptime_init:
 uptime_load:
     pha
 @uptime_load_retry:
-    stx     bios_private + BIOSPrivate::ptr + Ptr::lo
-    sty     bios_private + BIOSPrivate::ptr + Ptr::hi
+    stx     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    sty     bios_private + BIOSPrivate::ptr0 + Ptr::hi
 
     lda     uptime + Time::seconds
     ldy     #Time::seconds
-    sta     (bios_private + BIOSPrivate::ptr), y
+    sta     (bios_private + BIOSPrivate::ptr0), y
 
     lda     uptime + Time::minutes
     ldy     #Time::minutes
-    sta     (bios_private + BIOSPrivate::ptr), y
+    sta     (bios_private + BIOSPrivate::ptr0), y
 
     lda     uptime + Time::hours
     ldy     #Time::hours
-    sta     (bios_private + BIOSPrivate::ptr), y
+    sta     (bios_private + BIOSPrivate::ptr0), y
     lda     uptime + Time::hours + 1
     ldy     #Time::hours + 1
-    sta     (bios_private + BIOSPrivate::ptr), y
+    sta     (bios_private + BIOSPrivate::ptr0), y
 
     ldy     #Time::seconds
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     cmp     uptime + Time::seconds
     bne     @uptime_load_retry
 

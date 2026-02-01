@@ -31,15 +31,15 @@ u16:    .res 2
 ;
 divmod_16:
     beq     @divmod_16_div_zero
-    stx     bios_private + BIOSPrivate::ptr + Ptr::lo
-    sty     bios_private + BIOSPrivate::ptr + Ptr::hi
+    stx     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    sty     bios_private + BIOSPrivate::ptr0 + Ptr::hi
     sta     base
 
     ldy     #0
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     u16
     iny
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     u16 + 1
     
     stz     rem

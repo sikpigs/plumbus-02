@@ -28,14 +28,14 @@ digit_cnt:      .res 1
 ; (Y, X) - pointer to u16
 ;
 print_u16:
-    stx     bios_private + BIOSPrivate::ptr + Ptr::lo
-    sty     bios_private + BIOSPrivate::ptr + Ptr::hi
+    stx     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    sty     bios_private + BIOSPrivate::ptr0 + Ptr::hi
 
     ldy     #0
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     u16_work
     iny
-    lda     (bios_private + BIOSPrivate::ptr), y
+    lda     (bios_private + BIOSPrivate::ptr0), y
     sta     u16_work + 1
 
     stz     digit_cnt

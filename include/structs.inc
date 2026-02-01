@@ -3,6 +3,11 @@
     hi      .byte
 .endstruct
 
+.struct UInt16
+    lo      .byte
+    hi      .byte
+.endstruct
+
 .struct Time
     seconds     .byte
     minutes     .byte
@@ -19,12 +24,14 @@
     count   .word
 .endstruct
 
+
 .struct BIOSPrivate
     ; read buffer indices
     read_ix         .byte
     write_ix        .byte
     ; for general purpose use
-    ptr             .tag Ptr
+    ptr0            .tag Ptr
+    ptr1            .tag Ptr
     ; for IRQ use
     shift_func_ptr  .tag Ptr
     shift_data_ptr  .tag Ptr

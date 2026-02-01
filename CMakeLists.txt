@@ -27,6 +27,8 @@ define_property(GLOBAL PROPERTY ALL_OBJECT_TARGETS
     FULL_DOCS "Targets that assemble .s files"
 )
 
+file(GLOB INC_FILES "include/*.inc")
+
 # ------------------------------------------------------------
 # Assemble function
 # Usage:
@@ -65,7 +67,7 @@ function(assemble_65c02 TARGET)
                 -o ${OBJ}
                 -I${CMAKE_SOURCE_DIR}/include
                 ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}
-            DEPENDS ${SOURCE} ${ASM_DEPENDS}
+            DEPENDS ${SOURCE} ${ASM_DEPENDS} ${INC_FILES}
             COMMENT "Assembling ${SOURCE}"
             VERBATIM
         )

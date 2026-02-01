@@ -257,15 +257,15 @@ delay_100:
 ; (Y, X) - address of sub-routine
 ;
 call:
-    stx     bios_private + BIOSPrivate::ptr + Ptr::lo
-    sty     bios_private + BIOSPrivate::ptr + Ptr::hi
+    stx     bios_private + BIOSPrivate::ptr0 + Ptr::lo
+    sty     bios_private + BIOSPrivate::ptr0 + Ptr::hi
 
     lda     #>(@call_return - 1)
     pha
     lda     #<(@call_return - 1)
     pha
 
-    jmp     (bios_private + BIOSPrivate::ptr)
+    jmp     (bios_private + BIOSPrivate::ptr0)
 
 @call_return:
     rts
