@@ -16,13 +16,13 @@
 .endmacro
 
 .macro U16DEC value
-    lda     value
+    lda     value + UInt16::lo
     sec
     sbc     #1
-    sta     value
-    lda     value + 1
+    sta     value + UInt16::lo
+    lda     value + UInt16::hi
     sbc     #0
-    sta     value + 1
+    sta     value + UInt16::hi
 .endmacro
 
 RNG_STATE .set $A5

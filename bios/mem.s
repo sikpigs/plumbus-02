@@ -74,8 +74,6 @@ memcmp:
     ply
     rts
 
-; TEST_MEMCMP := 1
-
 .ifdef TEST_MEMCMP
 
 .segment "RODATA"
@@ -274,8 +272,6 @@ memcpy:
 @memcpy_done:
     ply
     rts
-
-; TEST_MEMCPY := 1
 
 .ifdef TEST_MEMCPY
 
@@ -522,8 +518,6 @@ memset:
     ply
     rts
 
-; RUN_MEMSET := 1
-
 .ifdef RUN_MEMSET
 run_memset:
     lda     $1A00
@@ -538,8 +532,6 @@ run_memset:
     jsr     memset
     jmp     $FF00
 .endif
-
-; TEST_MEMSET := 1
 
 .ifdef TEST_MEMSET
 
@@ -737,16 +729,18 @@ memset_run_tests:
 ;
 memmove:
     ; bail early if count == 0
-    lda     mem_args + MemArgs::count
-    ora     mem_args + MemArgs::count + 1
-    beq     @memmove_done
+    lda     mem_args + MemArgs::count + UInt16::lo
+    ora     mem_args + MemArgs::count + UInt16::hi
+    bne     :+
+    jmp     @memmove_done
+:
     ; mem_scratch_ptr = src + count
     clc
     lda     mem_args + MemArgs::src + Ptr::lo
-    adc     mem_args + MemArgs::count
+    adc     mem_args + MemArgs::count + UInt16::lo
     sta     mem_scratch_ptr + Ptr::lo
     lda     mem_args + MemArgs::src + Ptr::hi
-    adc     mem_args + MemArgs::count + 1
+    adc     mem_args + MemArgs::count + UInt16::hi
     sta     mem_scratch_ptr + Ptr::hi
     ; check copy order:
     ; if dst < src then forwards
@@ -757,13 +751,19 @@ memmove:
     ; check high bytes first
     lda     mem_args + MemArgs::dst + Ptr::hi
     cmp     mem_args + MemArgs::src + Ptr::hi
-    bne     @memmove_check_dst_vs_end           ; dst+1 > src+1
     bcc     @memmove_forward                    ; dst+1 < src+1
+    bne     @memmove_check_dst_vs_end           ; dst+1 > src+1
     ; else dst+1 == src+1
     lda     mem_args + MemArgs::dst + Ptr::lo
     cmp     mem_args + MemArgs::src + Ptr::lo
     bcc     @memmove_forward                    ; dst < src
-    beq     @memmove_done                       ; dst == src
+.ifdef TEST_MEMMOVE
+    bne     @memmove_check_dst_vs_end
+    stz     memmove_test_result 
+    rts
+.else
+    beq     @memmove_done
+.endif
     ; else dst > src
 @memmove_check_dst_vs_end:
     ; if we're here that means dst+1 > src+1 or (dst+1 == src+1 and dst > src)
@@ -777,6 +777,10 @@ memmove:
     cmp     mem_scratch_ptr + Ptr::lo
     bcc     @memmove_backward                   ; dst < src+count
 @memmove_forward:
+.ifdef TEST_MEMMOVE
+    stz     memmove_test_result
+    rts
+.endif
     jmp     memcpy
 @memmove_backward:
     ; backward memcpy
@@ -791,18 +795,18 @@ memmove:
     ; dst += count
     clc
     lda     mem_args + MemArgs::dst + Ptr::lo
-    adc     mem_args + MemArgs::count
+    adc     mem_args + MemArgs::count + UInt16::lo
     sta     mem_args + MemArgs::dst + Ptr::lo
     lda     mem_args + MemArgs::dst + Ptr::hi
-    adc     mem_args + MemArgs::count + 1
+    adc     mem_args + MemArgs::count + UInt16::hi
     sta     mem_args + MemArgs::dst + Ptr::hi
     ; src += count
     clc
     lda     mem_args + MemArgs::src + Ptr::lo
-    adc     mem_args + MemArgs::count
+    adc     mem_args + MemArgs::count + UInt16::lo
     sta     mem_args + MemArgs::src + Ptr::lo
     lda     mem_args + MemArgs::src + Ptr::hi
-    adc     mem_args + MemArgs::count + 1
+    adc     mem_args + MemArgs::count + UInt16::hi
     sta     mem_args + MemArgs::src + Ptr::hi
 @memmove_loop:
     PTRDEC  mem_args + MemArgs::src
@@ -812,13 +816,11 @@ memmove:
     lda     (mem_args + MemArgs::src)
     sta     (mem_args + MemArgs::dst)
 
-    lda     mem_args + MemArgs::count
-    ora     mem_args + MemArgs::count + 1
+    lda     mem_args + MemArgs::count + UInt16::lo
+    ora     mem_args + MemArgs::count + UInt16::hi
     bne     @memmove_loop
 @memmove_done:
     rts
-
-; RUN_MEMMOVE := 1
 
 .ifdef RUN_MEMMOVE
 run_memmove:
@@ -838,14 +840,12 @@ run_memmove:
     jmp     $FF00
 .endif
 
-; TEST_MEMMOVE := 1
-
 .ifdef TEST_MEMMOVE
 
 .segment "RODATA"
 .define MOV_GUARD_SIZE  16
 .define MOV_ARENA_SIZE  480
-.define MOV_OVERLAP     50
+.define MOV_OVERLAP     MOV_GUARD_SIZE + 1
 .define SRC_TOP_SIZE    34
 .define SRC_MIDDLE_SIZE 16
 .define SRC_END_SIZE    430
@@ -881,8 +881,8 @@ SRC_GUARD_PATTERN_LO    = $AA
 .assert(MemMov::Src::end      = $42),  error, "Src.end offset wrong"
 .assert(MemMov::Src::guard_lo = $1F0), error, "Src.guard_lo offset wrong"
 .assert(MemMov::Dst::overlap  = $0), error, "Dst.overlap offset wrong"
-.assert(MemMov::Dst::dst      = $32), error, "Dst.dst offset wrong"
-.assert(MemMov::Dst::guard_lo = $212), error, "Dst.guard_lo offset wrong"
+.assert(MemMov::Dst::dst      = $11), error, "Dst.dst offset wrong"
+.assert(MemMov::Dst::guard_lo = $1F1), error, "Dst.guard_lo offset wrong"
 
 .struct MemMovExp
     top         .byte SRC_TOP_SIZE 
@@ -925,27 +925,32 @@ memmove_backward_test_init:
     MOVINIT memmove_backward_test_src + MemMov::Src::end, SRC_END_SIZE, SRC_PATTERN_END              ; $55
     MOVINIT memmove_backward_test_src + MemMov::Src::guard_lo, MOV_GUARD_SIZE, SRC_GUARD_PATTERN_LO  ; $AA
 
-    MOVINIT memmove_backward_test_exp + MemMovExp::top, SRC_TOP_SIZE, SRC_PATTERN_TOP                ; $FF
-    MOVINIT memmove_backward_test_exp + MemMovExp::middle, SRC_MIDDLE_SIZE, SRC_PATTERN_MIDDLE       ; $00
-    MOVINIT memmove_backward_test_exp + MemMovExp::end, SRC_END_SIZE, SRC_PATTERN_END                ; $55
-    MOVINIT memmove_backward_test_exp + MemMovExp::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN       ; $CC
+    MOVINIT memmove_test_exp + MemMovExp::top, SRC_TOP_SIZE, SRC_PATTERN_TOP                ; $FF
+    MOVINIT memmove_test_exp + MemMovExp::middle, SRC_MIDDLE_SIZE, SRC_PATTERN_MIDDLE       ; $00
+    MOVINIT memmove_test_exp + MemMovExp::end, SRC_END_SIZE, SRC_PATTERN_END                ; $55
+    MOVINIT memmove_test_exp + MemMovExp::guard_lo, MOV_GUARD_SIZE, DST_GUARD_PATTERN       ; $CC
 memmove_backward_test_init_end:
 
 MEMMOVE_BACK_TEST_INIT_COUNT = (memmove_backward_test_init_end - memmove_backward_test_init) / .sizeof(MemMovInit)
 
 memmove_tests:
     MOVTST memmove_backward_test, memmove_backward_test_init, MEMMOVE_BACK_TEST_INIT_COUNT
+    MOVTST memmove_equal_test, 0, 0
+    MOVTST memmove_dst_src_hi_test, 0, 0
+    MOVTST memmove_dst_src_lo_test, 0, 0
+    MOVTST memmove_dst_end_test, 0, 0
 memmove_tests_end:
 
 MEMMOVE_TESTS_COUNT = (memmove_tests_end - memmove_tests) / .sizeof(MemMovTest)
 
 .segment "BIOSRAM"
 
-memmove_backward_test_area:  .res .sizeof(MemMov)
-memmove_backward_test_exp:   .res .sizeof(MemMovExp)
+memmove_test_area:              .res .sizeof(MemMov)
+memmove_test_exp:               .res .sizeof(MemMovExp)
+memmove_test_result:    .res 1
 
-memmove_backward_test_src = memmove_backward_test_area
-memmove_backward_test_dst = memmove_backward_test_area
+memmove_backward_test_src = memmove_test_area
+memmove_backward_test_dst = memmove_test_area
 
 .segment "BIOS"
 
@@ -990,7 +995,7 @@ memmove_test_init:
     lda     bios_private + BIOSPrivate::ptr1, y
     adc     #.sizeof(MemMovInit)
     sta     bios_private + BIOSPrivate::ptr1, y
-    ldy    #Ptr::hi
+    ldy     #Ptr::hi
     lda     bios_private + BIOSPrivate::ptr1, y
     adc     #0
     sta     bios_private + BIOSPrivate::ptr1, y
@@ -1000,8 +1005,60 @@ memmove_test_init:
     plx
     rts
 
+memmove_equal_test:
+    lda     #$A5
+    sta     mem_args + MemArgs::count + UInt16::lo
+    sta     mem_args + MemArgs::count + UInt16::hi
+    sta     mem_args + MemArgs::dst + Ptr::lo
+    sta     mem_args + MemArgs::dst + Ptr::hi
+    sta     mem_args + MemArgs::src + Ptr::lo
+    sta     mem_args + MemArgs::src + Ptr::hi
+    sta     memmove_test_result
+    jsr     memmove
+    lda     memmove_test_result
+    rts
+
+; dst.hi < src.hi, count != 0
+memmove_dst_src_hi_test:
+    lda     #1
+    sta     mem_args + MemArgs::count + UInt16::lo
+    sta     mem_args + MemArgs::count + UInt16::hi
+    sta     mem_args + MemArgs::src + Ptr::hi
+    stz     mem_args + MemArgs::dst + Ptr::hi
+    sta     memmove_test_result
+    jsr     memmove
+    lda     memmove_test_result
+    rts
+
+; dst.hi == src.hi, dst.lo < src.lo count != 0
+memmove_dst_src_lo_test:
+    lda     #1
+    sta     mem_args + MemArgs::count + UInt16::lo
+    sta     mem_args + MemArgs::count + UInt16::hi
+    sta     mem_args + MemArgs::src + Ptr::hi
+    stz     mem_args + MemArgs::dst + Ptr::hi
+    sta     memmove_test_result
+    jsr     memmove
+    lda     memmove_test_result
+    rts
+
+; dst == end (src + count)
+memmove_dst_end_test:
+    lda     #1
+    sta     mem_args + MemArgs::count + UInt16::lo
+    sta     mem_args + MemArgs::count + UInt16::hi
+    sta     mem_args + MemArgs::dst + Ptr::lo
+    sta     mem_args + MemArgs::dst + Ptr::hi
+    sta     memmove_test_result
+    lda     #$00
+    sta     mem_args + MemArgs::src + Ptr::lo
+    sta     mem_args + MemArgs::src + Ptr::hi
+    jsr     memmove
+    lda     memmove_test_result
+    rts
+
 ;
-; memove backwards test
+; memmove backwards test
 ; returns result in A - 0 pass, non-zero fail
 ;
 memmove_backward_test:
@@ -1030,9 +1087,9 @@ memmove_backward_test:
     lda     #>(memmove_backward_test_dst + MemMov::Dst::dst)
     sta     mem_args + MemArgs::dst + Ptr::hi
     ; set expected
-    lda     #<(memmove_backward_test_exp + MemMovExp::top)
+    lda     #<(memmove_test_exp + MemMovExp::top)
     sta     mem_args + MemArgs::src + Ptr::lo
-    lda     #>(memmove_backward_test_exp + MemMovExp::top)
+    lda     #>(memmove_test_exp + MemMovExp::top)
     sta     mem_args + MemArgs::src + Ptr::hi
     ; set count
     lda     #<MOV_ARENA_SIZE
@@ -1113,4 +1170,4 @@ memmove_run_tests:
     bra     @next_test
 :
     jmp     $FF00
-.endif
+.endif ; TEST_MEMMOVE
